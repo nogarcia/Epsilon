@@ -1,5 +1,5 @@
 {
     "token": "token_here",
     "prefix": ">",
-    "root":"root id"
+    "root": 1234
 }
