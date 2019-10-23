@@ -3,6 +3,7 @@ The Epsilon code.
 """
 import json
 import hashlib
+from random import randint
 import requests
 import discord
 
@@ -32,7 +33,7 @@ def wikipedia(wiki_args):
     """
     Get Wikipedia information and infobox photo URL.
     """
-
+    # TODO: use a python wrapper instead of this mess
     # Search Wikipedia for page.
     # Explained here: https://stackoverflow.com/questions/27457977/searching-wikipedia-using-api
     # And here:
@@ -67,6 +68,30 @@ def wikipedia(wiki_args):
     # Return the page and the photo.
     return wiki_page, photo_url
 
+def xkcd(comic_id=0):
+    """
+    Get URL of an XKCD comic. comic_id defaults to 0, meaning random.
+    """
+    latest_comic = requests.get("http://xkcd.com/info.0.json").json()
+    latest_num = latest_comic["num"]
+    if comic_id == 0:
+        comic = requests.get("http://xkcd.com/{}/info.0.json".format(randint(1, latest_num))).json()
+    elif comic_id > 0:
+        comic = requests.get("http://xkcd.com/{}/info.0.json".format(comic_id)).json()
+    elif comic_id < 0:
+        if (latest_num + comic_id) <= 0:
+            return None
+        comic = requests.get("http://xkcd.com/{}/info.0.json".format(latest_num + comic_id)).json()
+    else:
+        comic = latest_comic
+    
+    comic_url = comic["img"]
+    comic_text = comic["alt"]
+
+    return comic_url, comic_text
+
+
+
 # bot functions
 @CLIENT.event
 async def on_ready():
@@ -92,6 +117,7 @@ async def on_message(message):
             await message.channel.send('pong!')
         elif command.startswith('stop') and message.author.id == ROOT:
             # Only stop for the root user
+            print("Logging out...")
             await message.channel.send('Logging out...')
             await CLIENT.logout()
         elif command.startswith('stop') and message.author.id != ROOT:
@@ -119,15 +145,22 @@ async def on_message(message):
             while "" in args:
                 args.remove("")
 
-            if args[0] is None:
-                # get latest
-                pass
-            elif args[0] == 'random':
-                # get random
-                pass
+            if len(args) == 0:
+                comic_url, comic_text = xkcd()
+            elif args[0] == 'latest':
+                comic_url, comic_text = xkcd("latest")
             elif represents_int(args[0]):
-                # get comic by id
-                pass
+                comic_url, comic_text = xkcd(int(args[0]))
+            else:
+                return
+            if comic_url is None:
+                return
+            embed = discord.Embed(
+                title="XKCD", color=0x000000
+            )
+            embed.set_image(url=comic_url)
+            embed.add_field(name="Text", value=comic_text, inline=True)
+            await message.channel.send(embed=embed)            
 
 TOKEN = CONFIG['token']
 CLIENT.run(TOKEN)
