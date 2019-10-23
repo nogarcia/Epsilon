@@ -6,6 +6,7 @@ import hashlib
 from random import randint
 import requests
 import discord
+import numexpr
 
 with open('config/config.json', 'r') as f:
     CONFIG = json.load(f)
@@ -161,6 +162,15 @@ async def on_message(message):
             embed.set_image(url=comic_url)
             embed.add_field(name="Text", value=comic_text, inline=True)
             await message.channel.send(embed=embed)            
+        elif command.startswith('math '):
+            args = command[len('math '):]
+            if len(args) == 0:
+                return
+            try:
+                result = numexpr.evaluate(args).item()
+                await message.channel.send('Result for "{}"": {}'.format(args, result))
+            except SyntaxError:
+                await message.channel.send('Syntax error in expression "{}"'.format(args))
 
 TOKEN = CONFIG['token']
 CLIENT.run(TOKEN)
