@@ -66,23 +66,30 @@ class KnowledgeCog(commands.Cog):
         """
         Get Wikipedia article as an embed.
         """
+        # Get the page and the infobox photo_url.
         wiki_page, photo_url = self.get_wikipedia(title)
+        # Check for failures
         if wiki_page is None:
             await ctx.send("No page found.")
+            return
+            # If we don't have a wiki page, there's no reason to keep going.
         if photo_url is None:
             await ctx.send("No photo found.")
+        # Try and send the embed. If we get a KeyError, we probably failed to get the page.
         try:
+            # Create an embed
             embed = discord.Embed(
                 title="Wikipedia", description=wiki_page[1][0], color=0xeeeeee)
             embed.add_field(
                 name="Page", value=wiki_page[2][0], inline=True)
+            # If we have a photo, add it to the embed
             if photo_url is not None:
                 embed.set_thumbnail(url=photo_url)
             embed.add_field(name="URL", value=wiki_page[3][0], inline=True)
+            # Send it.
             await ctx.send(embed=embed)
         except IndexError:
             await ctx.send(
-                ctx,
                 "No results for search: {}".format(title)
             )
 
@@ -91,8 +98,10 @@ class KnowledgeCog(commands.Cog):
         """
         Evaulate a python math expression.
         """
+        # Check if the expression is not valid
         if len(expr) == 0:
             return
+        # Try to evaluate it. Send errors if it fails.
         try:
             result = numexpr.evaluate(expr).item()
             await ctx.send('Result for "{}": {}'.format(expr, result))
