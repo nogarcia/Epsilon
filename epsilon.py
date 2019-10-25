@@ -16,12 +16,10 @@ with open('config/config.json', 'r') as f:
 PREFIX = CONFIG['prefix']
 CLIENT = discord.Client()
 
-initial_extensions = ['cogs.base', 'cogs.knowledge', 'cogs.fun', 'cogs.owner']
-
 bot = commands.Bot(command_prefix=PREFIX, description="Gamma's Discord helper.")
 
 if __name__ == '__main__':
-    for extension in initial_extensions:
+    for extension in CONFIG['cogs']:
         bot.load_extension(extension)
 
     TOKEN = CONFIG['token']

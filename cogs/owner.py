@@ -1,3 +1,4 @@
+import json
 import discord
 from discord.ext import commands
 
@@ -5,8 +6,9 @@ class OwnerCog(commands.Cog):
     """
     Owner cog. Only works with bot owner.
     """
-    def __init__(self, bot):
+    def __init__(self, bot, config):
         self.bot = bot
+        self.config = config
     
     @commands.command(hidden=True)
     @commands.is_owner()
@@ -45,17 +47,27 @@ class OwnerCog(commands.Cog):
 
     @commands.command(name='reload', hidden=True)
     @commands.is_owner()
-    async def cogs_reload(self, ctx, *, cog: str):
+    async def cogs_reload(self, ctx, *, cog: str = None):
         """Command which Reloads a Module.
         Remember to use dot path. e.g: cogs.owner"""
-
-        try:
-            self.bot.unload_extension(cog)
-            self.bot.load_extension(cog)
-        except Exception as e:
-            await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
+        if cog is None:
+            for config_cog in self.config['cogs']:
+                try:
+                    self.bot.unload_extension(config_cog)
+                    self.bot.load_extension(config_cog)
+                except Exception as e:
+                    await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
+                else:
+                    await ctx.send('**`SUCCESS loading cog {}`**'.format(config_cog))
+                     
         else:
-            await ctx.send('**`SUCCESS`**')
+            try:
+                self.bot.unload_extension(cog)
+                self.bot.load_extension(cog)
+            except Exception as e:
+                await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
+            else:
+                await ctx.send('**`SUCCESS`**')
 
     @commands.command(name='status', hidden=True)
     @commands.is_owner()
@@ -68,4 +80,6 @@ class OwnerCog(commands.Cog):
         await self.bot.change_presence(activity=discord.Game(name=status))
 
 def setup(bot):
-    bot.add_cog(OwnerCog(bot))
+    with open('config/config.json', 'r') as f:
+        CONFIG = json.load(f)
+    bot.add_cog(OwnerCog(bot, CONFIG))
