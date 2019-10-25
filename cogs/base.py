@@ -33,5 +33,16 @@ class BaseCog(commands.Cog):
         embed.set_footer(text="Link to {}".format(CONFIG['invites'][server]["name"]))
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def info(self, ctx):
+        """
+        Get information about Epsilon.
+        """
+        embed = discord.Embed(color=0xA2CD48, title="Info")
+        embed.add_field(name="Name", value="Epsilon", inline=True)
+        embed.add_field(name="Source", value="https://github.com/Shrubhog/Epsilon", inline=True)
+        embed.set_thumbnail(url="https://media.discordapp.net/attachments/545246297062375424/636630299341619201/chrome_ur4GRsKe2b.png")
+        await ctx.send(embed=embed)
+
 def setup(bot):
     bot.add_cog(BaseCog(bot))
