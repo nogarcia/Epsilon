@@ -1,5 +1,8 @@
 {
     "token": "token_here",
     "prefix": ">",
-    "root": 1234
+    "invites": {
+        "name": "Server Name",
+        "url": "https://discord.gg/server"
+    }
 }

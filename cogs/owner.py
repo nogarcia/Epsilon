@@ -51,5 +51,15 @@ class OwnerCog(commands.Cog):
         else:
             await ctx.send('**`SUCCESS`**')
 
+    @commands.command(name='status', hidden=True)
+    @commands.is_owner()
+    async def status(self, ctx, *, status: str=""):
+        if len(status) == 0:
+            await ctx.send("Clearing status")
+            await self.bot.change_presence()
+            return
+        await ctx.send("Changing status to {}".format(status))
+        await self.bot.change_presence(activity=discord.Game(name=status))
+
 def setup(bot):
     bot.add_cog(OwnerCog(bot))

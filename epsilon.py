@@ -15,7 +15,6 @@ with open('config/config.json', 'r') as f:
 # config stuff
 PREFIX = CONFIG['prefix']
 CLIENT = discord.Client()
-ROOT = CONFIG['root']
 
 initial_extensions = ['cogs.base', 'cogs.knowledge', 'cogs.fun', 'cogs.owner']
 

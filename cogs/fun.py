@@ -37,11 +37,14 @@ class FunCog(commands.Cog):
 
     @commands.command()
     async def xkcd(self, ctx, *, comic_id: int = 0):
+        """
+        Get an xkcd comic in an embed. Returns a random comic unless you give a number.
+        """
         comic_url, comic_text = self.get_xkcd(comic_id)
         if comic_url is None:
             return
         embed = discord.Embed(
-            title="XKCD", color=0x000000
+            title="xkcd", color=0x000000
         )
         embed.set_image(url=comic_url)
         embed.add_field(name="Text", value=comic_text, inline=True)
