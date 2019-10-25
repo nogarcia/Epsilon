@@ -26,7 +26,7 @@ class KnowledgeCog(commands.Cog):
         try:
             wiki_page = requests.get(
                 ("https://en.wikipedia.org/w/api.php?action=opensearch"
-                "&search={0}&limit=1&namespace=0&format=json")
+                "&search={0}&limit=1&namespace=0&format=json&redirects=resolve")
                 .format(wiki_args)
             ).json()
         except KeyError:
