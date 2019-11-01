@@ -1,7 +1,9 @@
 """
 The knowledge cog.
 """
+import os
 import hashlib
+import subprocess
 import numexpr
 import discord
 from discord.ext import commands
@@ -107,6 +109,20 @@ class KnowledgeCog(commands.Cog):
             await ctx.send('Result for "{}": {}'.format(expr, result))
         except SyntaxError:
             await ctx.send('Syntax error in expression "{}"'.format(expr))
+
+    @commands.command()
+    async def tex(self, ctx, *, expr: str):
+        """
+        Render a TeX expression.
+        """
+        if len(expr) == 0:
+            return
+        texhash = hashlib.md5(expr.encode('utf-8')).hexdigest()
+        subprocess.run(['tex2png', '-c', expr, '-o', './tmp/tex/' + texhash + ".png", '-T', '-D', '1400', '-b', 'rgb 1 1 1'])
+        with open('tmp/tex/' + texhash + ".png", 'rb') as f:
+            output = discord.File(f)
+        await ctx.send(file=output)
+        os.remove('tmp/tex/' + texhash + ".png")
 
 def setup(bot):
     bot.add_cog(KnowledgeCog(bot))
