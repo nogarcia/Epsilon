@@ -7,7 +7,8 @@ from random import randint
 import discord
 from discord.ext import commands
 import requests
-
+from bs4 import BeautifulSoup
+# from helpers import scrap_song_url
 
 class FunCog(commands.Cog):
     """
@@ -66,6 +67,28 @@ class FunCog(commands.Cog):
             return
         await ctx.send(config_kaomote)
 
+    @commands.command()
+    async def lyrics(self, ctx, *, song: str = None):
+        """
+        Get lyrics for a song.
+        Song must be in the format of '{artist} {song}'.
+        Currently this isn't very accurate (direct URL call, not a search) and will likely give a 404.
+        """
+        if song is None or len(song) == 0:
+            return
+        
+        song_url = "https://genius.com/{}-lyrics".format(song.replace(' ', '-').lower())
+        
+        page = requests.get(song_url)
+        html = BeautifulSoup(page.text, 'html.parser')
+        song_lyrics = html.find('div', class_='lyrics').get_text()
+
+        if len(song_lyrics) <= 1024:
+            await ctx.send(song_lyrics)
+        else:
+            chunks = [song_lyrics[i:i+1024] for i in range(0, len(song_lyrics), 1024)]
+            for chunk in chunks:
+                await ctx.send(chunk)
 
 def setup(bot):
     with open('config/config.json', 'r') as f:
