@@ -4,5 +4,17 @@
     "invites": {
         "name": "Server Name",
         "url": "https://discord.gg/server"
+    },
+    "cogs": [
+        "cogs.base",
+        "cogs.knowledge",
+        "cogs.fun",
+        "cogs.owner"
+    ],
+    "kaomoji": {
+        "kaomotes": {
+            "tableflip": "(╯°□°)╯︵ ┻━┻",
+            "squee": "＼(≧▽≦)／"
+        }
     }
 }
