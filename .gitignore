@@ -4,3 +4,4 @@ __pycache__
 config/config.json
 .vscode
 tmp
+log
