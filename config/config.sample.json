@@ -16,5 +16,9 @@
             "tableflip": "(╯°□°)╯︵ ┻━┻",
             "squee": "＼(≧▽≦)／"
         }
+    },
+    "icndb": {
+        "include": [],
+        "exclude": []
     }
 }

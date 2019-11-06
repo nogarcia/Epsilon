@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands
 import requests
 from bs4 import BeautifulSoup
+import html
 # from helpers import scrap_song_url
 
 class FunCog(commands.Cog):
@@ -89,6 +90,31 @@ class FunCog(commands.Cog):
             chunks = [song_lyrics[i:i+1024] for i in range(0, len(song_lyrics), 1024)]
             for chunk in chunks:
                 await ctx.send(chunk)
+
+    @commands.command()
+    async def icndb(self, ctx):
+        """
+        Get a joke from the ICNDB (Internet Chuck Norris Database).
+        """
+        include = self.config["icndb"]["include"]
+        exclude = self.config["icndb"]["exclude"]
+
+        exclude_string = ','.join([str(x) for x in exclude])
+
+        url = 'http://api.icndb.com/jokes/random?exclude=[{}]'.format(exclude_string)
+
+        if len(include) > 0:
+            include_string = ','.join([str(x) for x in include])
+            url += "&limitTo=[{}]".format(include_string)
+        
+        joke_response = requests.get(url).json()
+        if joke_response["type"] == "success":
+            # send the joke
+            await ctx.send("Joke #{}: {}".format(joke_response["value"]["id"], html.unescape(joke_response["value"]["joke"])))
+        elif joke_response["type"] == "NoSuchCategoryException":
+            await ctx.send("No such category: {}. Contact the bot owner to remove this category from the config file.".format(joke_response["value"]))
+        else:
+            await ctx.send("Error: {}".format(joke_response["type"]))
 
 def setup(bot):
     with open('config/config.json', 'r') as f:
