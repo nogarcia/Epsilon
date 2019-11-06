@@ -60,13 +60,21 @@ class FunCog(commands.Cog):
         Print a kaomoji.
         """
         if kaomote is None or len(kaomote) == 0:
+            error_embed = discord.Embed(title="Error", color=0xFF0000, type="rich")
+            kaomojis = ', '.join([str(x) for x in self.config["kaomoji"]["kaomotes"]])
+            error_embed.add_field(name="No kaomoji provided.", value="Choose between one of the following: " + kaomojis, inline=True)
+            await ctx.send(embed=error_embed)
             return
         # Ensure markdown characters are escaped. "
         # "._____." will show up as "._." with italics without escape characters.
-        config_kaomote = self.config["kaomoji"]["kaomotes"][kaomote]
-        if config_kaomote is None:
-            return
-        await ctx.send(config_kaomote)
+        try:
+            config_kaomote = self.config["kaomoji"]["kaomotes"][kaomote]
+            await ctx.send(config_kaomote)
+        except KeyError:
+            error_embed = discord.Embed(title="Error", color=0xFF0000, type="rich")
+            kaomojis = ', '.join([str(x) for x in self.config["kaomoji"]["kaomotes"]])
+            error_embed.add_field(name="No kaomoji found.", value="Choose between one of the following: " + kaomojis, inline=True)
+            await ctx.send(embed=error_embed)
 
     @commands.command()
     async def lyrics(self, ctx, *, song: str = None):
