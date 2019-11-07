@@ -9,10 +9,12 @@ import discord
 from discord.ext import commands
 import requests
 
+
 class KnowledgeCog(commands.Cog):
     """
     The knowledge cog.
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -27,9 +29,10 @@ class KnowledgeCog(commands.Cog):
         # https://stackoverflow.com/questions/1565347/get-first-lines-of-wikipedia-article/19781754
         try:
             wiki_page = requests.get(
-                ("https://en.wikipedia.org/w/api.php?action=opensearch"
-                "&search={0}&limit=1&namespace=0&format=json&redirects=resolve")
-                .format(wiki_args)
+                (
+                    "https://en.wikipedia.org/w/api.php?action=opensearch"
+                    "&search={0}&limit=1&namespace=0&format=json&redirects=resolve"
+                ).format(wiki_args)
             ).json()
         except KeyError:
             print("Page not found")
@@ -39,24 +42,30 @@ class KnowledgeCog(commands.Cog):
             # Process explained here:
             # https://stackoverflow.com/questions/36813352/how-to-reliably-get-the-image-used-in-the-wikipedia-infobox
             embed_photo = requests.get(
-                ("https://www.wikidata.org/w/api.php?action=wbgetentities"
-                "&format=json&sites=enwiki&props=claims&titles={}")
-                .format(wiki_page[1][0])).json()
+                (
+                    "https://www.wikidata.org/w/api.php?action=wbgetentities"
+                    "&format=json&sites=enwiki&props=claims&titles={}"
+                ).format(wiki_page[1][0])
+            ).json()
             # Get the WikiData object code by getting the first result key.
             photo_id = next(iter(embed_photo["entities"]))
             # Get the page of that object.
             photo_values = requests.get(
-                ("https://www.wikidata.org/w/api.php?action=wbgetclaims"
-                "&entity={}&property=P18&format=json")
-                .format(photo_id))
+                (
+                    "https://www.wikidata.org/w/api.php?action=wbgetclaims"
+                    "&entity={}&property=P18&format=json"
+                ).format(photo_id)
+            )
             # Take the image name from the first image on
             # the page (images are P18s) and get rid of spaces.
-            photo_name = photo_values.json()["claims"]["P18"][0] \
-                ["mainsnak"]["datavalue"]["value"].replace(" ", "_")
+            photo_name = photo_values.json()["claims"]["P18"][0]["mainsnak"][
+                "datavalue"
+            ]["value"].replace(" ", "_")
             # Get the hash of that name and use it to get the URL in WikiMedia's upload format.
-            photo_hash = hashlib.md5(photo_name.encode('utf-8')).hexdigest()
+            photo_hash = hashlib.md5(photo_name.encode("utf-8")).hexdigest()
             photo_url = "https://upload.wikimedia.org/wikipedia/commons/{}/{}/{}".format(
-                photo_hash[0], photo_hash[:2], photo_name)
+                photo_hash[0], photo_hash[:2], photo_name
+            )
         except KeyError:
             print("No photo found.")
             photo_url = None
@@ -81,9 +90,9 @@ class KnowledgeCog(commands.Cog):
         try:
             # Create an embed
             embed = discord.Embed(
-                title="Wikipedia", description=wiki_page[1][0], color=0xeeeeee)
-            embed.add_field(
-                name="Page", value=wiki_page[2][0], inline=True)
+                title="Wikipedia", description=wiki_page[1][0], color=0xEEEEEE
+            )
+            embed.add_field(name="Page", value=wiki_page[2][0], inline=True)
             # If we have a photo, add it to the embed
             if photo_url is not None:
                 embed.set_thumbnail(url=photo_url)
@@ -91,9 +100,7 @@ class KnowledgeCog(commands.Cog):
             # Send it.
             await ctx.send(embed=embed)
         except IndexError:
-            await ctx.send(
-                "No results for search: {}".format(title)
-            )
+            await ctx.send("No results for search: {}".format(title))
 
     @commands.command()
     async def math(self, ctx, *, expr: str):
@@ -117,12 +124,26 @@ class KnowledgeCog(commands.Cog):
         """
         if len(expr) == 0:
             return
-        texhash = hashlib.md5(expr.encode('utf-8')).hexdigest()
-        subprocess.run(['tex2png', '-c', expr, '-o', './tmp/tex/' + texhash + ".png", '-T', '-D', '1400', '-b', 'rgb 1 1 1'])
-        with open('tmp/tex/' + texhash + ".png", 'rb') as f:
+        texhash = hashlib.md5(expr.encode("utf-8")).hexdigest()
+        subprocess.run(
+            [
+                "tex2png",
+                "-c",
+                expr,
+                "-o",
+                "./tmp/tex/" + texhash + ".png",
+                "-T",
+                "-D",
+                "1400",
+                "-b",
+                "rgb 1 1 1",
+            ]
+        )
+        with open("tmp/tex/" + texhash + ".png", "rb") as f:
             output = discord.File(f)
         await ctx.send(file=output)
-        os.remove('tmp/tex/' + texhash + ".png")
+        os.remove("tmp/tex/" + texhash + ".png")
+
 
 def setup(bot):
     bot.add_cog(KnowledgeCog(bot))
