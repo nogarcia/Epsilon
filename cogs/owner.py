@@ -1,6 +1,9 @@
 import json
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
+from pathlib import Path
+from hurry.filesize import size, si
+import os
 
 
 class OwnerCog(commands.Cog):
@@ -80,6 +83,28 @@ class OwnerCog(commands.Cog):
             return
         await ctx.send("Changing status to {}".format(status))
         await self.bot.change_presence(activity=discord.Game(name=status))
+
+    @commands.command(name="tmpsize", hidden=True)
+    @commands.is_owner()
+    async def check_temp(self, ctx):
+        temp_folder = Path("tmp/")
+        temp_size = sum(
+            f.stat().st_size for f in temp_folder.glob("**/*") if f.is_file()
+        )
+
+        await ctx.send(size(temp_size, system=si))
+
+    @commands.command(name="cleartmp", hidden=True)
+    @commands.is_owner()
+    async def clear_temp(self, ctx):
+        for tmp_file in os.listdir("./tmp/"):
+            file_path = os.path.join("./tmp/", tmp_file)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            except Exception as error:
+                await ctx.send("**ERROR**: `{}`".format(error))
+        await ctx.send("Done.")
 
 
 def setup(bot):
