@@ -12,7 +12,9 @@ class BaseCog(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        await ctx.send("pong!")
+        await ctx.send(
+            "pong! Latency: {} milliseconds".format(round(self.bot.latency * 1000, 1))
+        )
 
     @commands.command()
     async def invite(self, ctx, server: str = None):
