@@ -11,6 +11,45 @@ from bs4 import BeautifulSoup
 import html
 
 
+class XKCD(object):
+    def __init__(self, num):
+        latest_comic = requests.get("http://xkcd.com/info.0.json").json()
+        latest_num = latest_comic["num"]
+        if num == 0:
+            comic = requests.get(
+                "http://xkcd.com/{}/info.0.json".format(randint(1, latest_num))
+            ).json()
+        elif num > 0:
+            comic = requests.get("http://xkcd.com/{}/info.0.json".format(num)).json()
+        else:
+            comic = latest_comic
+
+        self.url = comic["img"]
+        self.alt = comic["alt"]
+
+
+class ICNDB(object):
+    def __init__(self, include, exclude):
+        exclude_string = ",".join([str(x) for x in exclude])
+
+        url = "http://api.icndb.com/jokes/random?exclude=[{}]".format(exclude_string)
+
+        if len(include) > 0:
+            include_string = ",".join([str(x) for x in include])
+            url += "&limitTo=[{}]".format(include_string)
+
+        joke_response = requests.get(url).json()
+        if joke_response["type"] == "success":
+            self.id = joke_response["value"]["id"]
+            self.joke = html.unescape(joke_response["value"]["joke"])
+            self.error = False
+        elif joke_response["type"] == "NoSuchCategoryException":
+            self.id = None
+            self.joke = None
+            self.error = True
+            raise Exception("No such category of ICNDB joke")
+
+
 class FunCog(commands.Cog):
     """
     Fun cog.
@@ -20,39 +59,18 @@ class FunCog(commands.Cog):
         self.bot = bot
         self.config = config
 
-    def get_xkcd(self, comic_id=0):
-        """
-        Get URL of an XKCD comic. comic_id defaults to 0, meaning random.
-        """
-        latest_comic = requests.get("http://xkcd.com/info.0.json").json()
-        latest_num = latest_comic["num"]
-        if comic_id == 0:
-            comic = requests.get(
-                "http://xkcd.com/{}/info.0.json".format(randint(1, latest_num))
-            ).json()
-        elif comic_id > 0:
-            comic = requests.get(
-                "http://xkcd.com/{}/info.0.json".format(comic_id)
-            ).json()
-        else:
-            comic = latest_comic
-
-        comic_url = comic["img"]
-        comic_text = comic["alt"]
-
-        return comic_url, comic_text
-
     @commands.command()
     async def xkcd(self, ctx, *, comic_id: int = 0):
         """
         Get an xkcd comic in an embed. Returns a random comic unless you give a number.
         """
-        comic_url, comic_text = self.get_xkcd(comic_id)
-        if comic_url is None:
+        comic = XKCD(comic_id)
+
+        if comic.url is None:
             return
         embed = discord.Embed(title="xkcd", color=0x000000)
-        embed.set_image(url=comic_url)
-        embed.add_field(name="Text", value=comic_text, inline=True)
+        embed.set_image(url=comic.url)
+        embed.add_field(name="Text", value=comic.alt, inline=True)
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -118,31 +136,12 @@ class FunCog(commands.Cog):
         include = self.config["icndb"]["include"]
         exclude = self.config["icndb"]["exclude"]
 
-        exclude_string = ",".join([str(x) for x in exclude])
+        joke = ICNDB(include, exclude)
 
-        url = "http://api.icndb.com/jokes/random?exclude=[{}]".format(exclude_string)
-
-        if len(include) > 0:
-            include_string = ",".join([str(x) for x in include])
-            url += "&limitTo=[{}]".format(include_string)
-
-        joke_response = requests.get(url).json()
-        if joke_response["type"] == "success":
-            # send the joke
-            await ctx.send(
-                "Joke #{}: {}".format(
-                    joke_response["value"]["id"],
-                    html.unescape(joke_response["value"]["joke"]),
-                )
-            )
-        elif joke_response["type"] == "NoSuchCategoryException":
-            await ctx.send(
-                "No such category: {}. Contact the bot owner to remove this category from the config file.".format(
-                    joke_response["value"]
-                )
-            )
+        if not joke.error:
+            await ctx.send("Joke #{}: {}".format(joke.id, joke.joke))
         else:
-            await ctx.send("Error: {}".format(joke_response["type"]))
+            await ctx.send("Couldn't get joke.")
 
 
 def setup(bot):
